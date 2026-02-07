@@ -14,6 +14,7 @@ import { FeeBreakdown } from "@/components/fee-breakdown";
 import { OrderTypeTable } from "@/components/order-type-table";
 import { TradeHistoryTable } from "@/components/trade-history-table";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { Footer } from "@/components/footer";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useDeriverseTrades } from "@/hooks/use-deriverse-trades";
 import { computeAnalytics } from "@/lib/analytics";
@@ -83,7 +84,7 @@ export default function DashboardPage() {
           {isLive && !tradesLoading && (
             <p className="mb-2 text-center text-xs text-teal">Live data from connected wallet</p>
           )}
-          {showingDemo && !tradesError && (
+          {!publicKey && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -93,12 +94,40 @@ export default function DashboardPage() {
               <p className="text-xs text-fg-muted">Connect your wallet to see your live trading history.</p>
             </motion.div>
           )}
+          {publicKey && !tradesLoading && !isLive && (showingDemo || tradesError) && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 flex flex-col items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center"
+            >
+              <p className="text-sm font-medium text-amber-200">No trades found for this wallet.</p>
+              <p className="text-xs text-fg-muted">
+                Make a trade on Deriverse testnet to see your data:{" "}
+                <a
+                  href="https://alpha.deriverse.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-teal underline hover:no-underline"
+                >
+                  alpha.deriverse.io
+                </a>
+              </p>
+            </motion.div>
+          )}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="mb-6 flex flex-wrap items-center justify-end gap-4"
+            className="mb-6 flex flex-wrap items-center justify-between gap-4"
           >
+            {!isLive && !tradesLoading && (
+              <span
+                className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200"
+                title="Connect wallet and trade on Deriverse testnet for live data"
+              >
+                Demo data
+              </span>
+            )}
             <Filters value={filters} onChange={setFilters} symbolOptions={symbolOptions} />
           </motion.div>
 
@@ -157,6 +186,7 @@ export default function DashboardPage() {
             <TradeHistoryTable trades={trades} />
           </motion.section>
         </main>
+        <Footer />
       </div>
     </div>
   );

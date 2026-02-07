@@ -5,7 +5,6 @@
 
 import {
   Trade,
-  FeeRecord,
   OrderType,
   Side,
   DailyPnL,
@@ -70,29 +69,6 @@ function generateTrades(count: number): Trade[] {
 }
 
 export const MOCK_TRADES = generateTrades(180);
-
-export function getFeeRecords(trades: Trade[]): FeeRecord[] {
-  return trades.flatMap((t) => [
-    {
-      tradeId: t.id,
-      amount: t.fee * 0.75,
-      currency: t.feeCurrency,
-      type: "taker" as const,
-      symbol: t.symbol,
-      timestamp: t.closedAt,
-    },
-    {
-      tradeId: t.id,
-      amount: t.fee * 0.25,
-      currency: t.feeCurrency,
-      type: "protocol" as const,
-      symbol: t.symbol,
-      timestamp: t.closedAt,
-    },
-  ]);
-}
-
-export const MOCK_FEE_RECORDS = getFeeRecords(MOCK_TRADES);
 
 /** Build daily PnL and drawdown from sorted trades (newest first). */
 export function buildDailyPnL(trades: Trade[]): DailyPnL[] {

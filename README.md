@@ -17,13 +17,14 @@ A comprehensive trading analytics solution for [Deriverse](https://deriverse.git
 - **Detailed trade history table** with **annotation capabilities** (persisted in localStorage)
 - **Fee composition breakdown** and **cumulative fee tracking** (taker vs protocol)
 - **Order type performance** analysis (limit, market, stop, stop_limit)
+- **Mock vs live:** When no wallet is connected, a banner and "Demo data" pill indicate mock data; connect your wallet to load live history. If the wallet has no Deriverse trades, the app prompts you to make a trade on [Deriverse testnet](https://alpha.deriverse.io).
 
 ## Tech Stack
 
 - **Next.js 15** (App Router), **TypeScript**, **Tailwind CSS**
 - **Recharts** for PnL, drawdown, session, and time-of-day charts
 - **Solana Wallet Adapter** (Phantom and others) for wallet connect
-- **@deriverse/kit** ready for integration (dashboard currently uses mock data for demo)
+- **@deriverse/kit** for live data (wallet tx history → decode → trades); mock data fallback when no wallet or no history
 
 ## Getting Started
 
@@ -77,17 +78,16 @@ pnpm start
 
 ## Data Source
 
-The UI currently uses **mock trade data** generated in `src/lib/mock-data.ts` so you can explore all features without a connected wallet or Deriverse account. To plug in live data:
-
-1. Connect a wallet (Solana Wallet Adapter is already wired in the header).
-2. Use `@deriverse/kit` to fetch client positions, orders, and—where the protocol exposes it—historical fills/trades.
-3. Map that data into the `Trade` type in `src/lib/types.ts` and pass it into `computeAnalytics()` and the dashboard components.
+- **No wallet connected:** The UI shows **mock trade data** from `src/lib/mock-data.ts`. A banner says "This is mock data" and a "Demo data" pill appears so it’s clear you’re not viewing real history.
+- **Wallet connected:** The app fetches the wallet’s transaction history from Solana RPC, decodes Deriverse program logs with `@deriverse/kit`’s `Engine.logsDecode`, and maps spot/perp fills to the dashboard’s `Trade` type. If no Deriverse trades are found (or RPC fails), the app falls back to mock data and shows: **"No trades found for this wallet. Make a trade on Deriverse testnet to see your data: [alpha.deriverse.io](https://alpha.deriverse.io)"**
+- **Trade on testnet:** To see your own analytics, connect your wallet and place trades on [alpha.deriverse.io](https://alpha.deriverse.io), then refresh or reconnect.
 
 ## Project Structure
 
 - `src/app/` – Next.js App Router (layout, page)
-- `src/components/` – Header, filters, KPI cards, charts, fee breakdown, order type table, trade history table
-- `src/lib/` – Types, mock data, analytics computations, utils
+- `src/components/` – Header, sidebar, filters, KPI cards, charts, fee breakdown, order type table, trade history table, loading overlay, footer, wallet provider
+- `src/hooks/` – useDeriverseTrades (live vs mock), useMediaQuery
+- `src/lib/` – Types, mock data, deriverse-trades (fetch + decode), analytics, utils
 
 ## Deploy to GitHub
 
@@ -111,6 +111,10 @@ git push -u origin main
 ```
 
 If your default branch is `master`, use `git push -u origin master` instead. To create a new repo on GitHub: [github.com/new](https://github.com/new), then run the `git remote add origin` and `git push` commands with the new repo URL.
+
+## Credits
+
+Built by [duke.sol](https://x.com/cryptoduke01) · [@cryptoduke01](https://x.com/cryptoduke01) on X
 
 ## License
 
