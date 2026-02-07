@@ -1,0 +1,163 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { parseISO } from "date-fns";
+import { motion } from "framer-motion";
+import { Sidebar } from "@/components/sidebar";
+import { Header } from "@/components/header";
+import { Filters, type FilterState } from "@/components/filters";
+import { KpiCards } from "@/components/kpi-cards";
+import { PnLDrawdownChart } from "@/components/charts/pnl-drawdown-chart";
+import { SessionChart } from "@/components/charts/session-chart";
+import { TimeOfDayChart } from "@/components/charts/time-of-day-chart";
+import { FeeBreakdown } from "@/components/fee-breakdown";
+import { OrderTypeTable } from "@/components/order-type-table";
+import { TradeHistoryTable } from "@/components/trade-history-table";
+import { LoadingOverlay } from "@/components/loading-overlay";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useDeriverseTrades } from "@/hooks/use-deriverse-trades";
+import { computeAnalytics } from "@/lib/analytics";
+import { useMediaQuery } from "@/hooks/use-media-query";
+
+const DEFAULT_FILTERS: FilterState = {
+  symbol: "All",
+  dateFrom: "",
+  dateTo: "",
+  timeRange: "30D",
+};
+
+const sectionTransition = { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] };
+
+export default function DashboardPage() {
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isLg = useMediaQuery("(min-width: 1024px)");
+  const sidebarVisible = isLg || sidebarOpen;
+  const { publicKey } = useWallet();
+  const { trades: rawTrades, loading: tradesLoading, error: tradesError, isLive, showingDemo } = useDeriverseTrades();
+
+  const symbolOptions = useMemo(() => {
+    const symbols = [...new Set(rawTrades.map((t) => t.symbol))].sort();
+    return ["All", ...symbols];
+  }, [rawTrades]);
+
+  const { trades, summary } = useMemo(() => {
+    let list = rawTrades;
+    const symbolFilter = filters.symbol === "All" ? undefined : filters.symbol;
+    const dateFrom = filters.dateFrom ? parseISO(filters.dateFrom) : undefined;
+    const dateTo = filters.dateTo ? parseISO(filters.dateTo) : undefined;
+    if (dateTo) dateTo.setHours(23, 59, 59, 999);
+    const summary = computeAnalytics(list, { symbolFilter, dateFrom, dateTo });
+    if (symbolFilter || dateFrom || dateTo) {
+      list = list.filter((t) => {
+        if (symbolFilter && t.symbol !== symbolFilter) return false;
+        if (dateFrom && t.closedAt < dateFrom) return false;
+        if (dateTo && t.closedAt > dateTo) return false;
+        return true;
+      });
+    }
+    return { trades: list, summary };
+  }, [rawTrades, filters]);
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar
+        open={sidebarVisible}
+        onClose={isLg ? undefined : () => setSidebarOpen(false)}
+      />
+      <div className="flex min-h-screen flex-1 flex-col min-w-0 lg:pl-[260px]">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 lg:py-8">
+          {tradesLoading && publicKey && (
+            <LoadingOverlay message="Loading trade history" />
+          )}
+          {tradesError && !tradesLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-fg-muted"
+            >
+              {tradesError}
+            </motion.div>
+          )}
+          {isLive && !tradesLoading && (
+            <p className="mb-2 text-center text-xs text-teal">Live data from connected wallet</p>
+          )}
+          {showingDemo && !tradesError && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 flex flex-col items-center justify-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center"
+            >
+              <p className="text-sm font-medium text-amber-200">This is mock data.</p>
+              <p className="text-xs text-fg-muted">Connect your wallet to see your live trading history.</p>
+            </motion.div>
+          )}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="mb-6 flex flex-wrap items-center justify-end gap-4"
+          >
+            <Filters value={filters} onChange={setFilters} symbolOptions={symbolOptions} />
+          </motion.div>
+
+          <motion.section
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={sectionTransition}
+            className="mb-8"
+            id="analytics"
+          >
+            <KpiCards summary={summary} />
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={sectionTransition}
+            className="mb-8 grid gap-5 lg:grid-cols-2"
+          >
+            <div className="rounded-card bg-gradient-to-b from-white/[0.04] to-surface-elevated/95 p-4 shadow-card backdrop-blur-sm">
+              <PnLDrawdownChart data={summary.dailyPnL} />
+            </div>
+            <div className="rounded-card bg-gradient-to-b from-white/[0.04] to-surface-elevated/95 p-4 shadow-card backdrop-blur-sm">
+              <SessionChart data={summary.sessionPerformance} />
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={sectionTransition}
+            className="mb-8"
+          >
+            <div className="rounded-card bg-gradient-to-b from-white/[0.04] to-surface-elevated/95 p-4 shadow-card backdrop-blur-sm">
+              <TimeOfDayChart data={summary.timeOfDayPerformance} />
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={sectionTransition}
+            className="mb-8 grid gap-5 lg:grid-cols-2"
+          >
+            <FeeBreakdown summary={summary} />
+            <OrderTypeTable summary={summary} />
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={sectionTransition}
+            className="mb-10"
+            id="transactions"
+          >
+            <TradeHistoryTable trades={trades} />
+          </motion.section>
+        </main>
+      </div>
+    </div>
+  );
+}

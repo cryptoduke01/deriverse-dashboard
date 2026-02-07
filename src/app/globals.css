@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ZEEX-style: deep charcoal canvas, card grey, teal/mint accent */
+:root {
+  --canvas: #0a0a0b;
+  --surface: #0f0f11;
+  --surface-elevated: #161619;
+  --surface-overlay: #1c1c1f;
+  --border: #2a2a2e;
+  --border-muted: #222226;
+  --fg: #ffffff;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #71717a;
+  --teal: #14b8a6;
+  --teal-dim: #0d9488;
+  --teal-bright: #2dd4bf;
+  --accent: #14b8a6;
+  --accent-green: #14b8a6;
+  --accent-red: #f87171;
+  --accent-amber: #fbbf24;
+  --chart-pnl: #14b8a6;
+  --chart-dd: #f87171;
+  --nav-active-bg: #27272a;
+  --pill-active-bg: #27272a;
+  --pill-inactive-bg: #3f3f46;
+  --pill-inactive-fg: #a1a1aa;
+  --shadow: 0 1px 0 0 rgba(255,255,255,0.03);
+  --shadow-lg: 0 4px 24px -4px rgba(0,0,0,0.24);
+}
+
+.dark {
+  --canvas: #0a0a0b;
+  --surface: #0f0f11;
+  --surface-elevated: #161619;
+  --surface-overlay: #1c1c1f;
+  --border: #2a2a2e;
+  --border-muted: #222226;
+  --fg: #ffffff;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #71717a;
+  --teal: #14b8a6;
+  --teal-dim: #0d9488;
+  --teal-bright: #2dd4bf;
+  --accent: #14b8a6;
+  --accent-green: #14b8a6;
+  --accent-red: #f87171;
+  --accent-amber: #fbbf24;
+  --chart-pnl: #14b8a6;
+  --chart-dd: #f87171;
+  --nav-active-bg: #27272a;
+  --pill-active-bg: #27272a;
+  --pill-inactive-bg: #3f3f46;
+  --pill-inactive-fg: #a1a1aa;
+  --shadow: 0 1px 0 0 rgba(255,255,255,0.03);
+  --shadow-lg: 0 4px 24px -4px rgba(0,0,0,0.24);
+}
+
+/* Light mode: keep optional for theme toggle */
+.light {
+  --canvas: #fafafa;
+  --surface: #ffffff;
+  --surface-elevated: #f4f4f5;
+  --surface-overlay: #e4e4e7;
+  --border: #e4e4e7;
+  --border-muted: #d4d4d8;
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #71717a;
+  --teal: #0d9488;
+  --teal-dim: #0f766e;
+  --teal-bright: #14b8a6;
+  --accent: #0d9488;
+  --accent-green: #0d9488;
+  --accent-red: #dc2626;
+  --accent-amber: #d97706;
+  --chart-pnl: #0d9488;
+  --chart-dd: #dc2626;
+  --nav-active-bg: #e4e4e7;
+  --pill-active-bg: #18181b;
+  --pill-inactive-bg: #e4e4e7;
+  --pill-inactive-fg: #52525b;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px -15px rgba(0, 0, 0, 0.1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--fg);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .glass {
+    background: rgba(22, 22, 25, 0.7);
+    backdrop-filter: blur(12px);
+  }
+  .glass-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(22,22,25,0.85) 100%);
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Native select - styled like a proper dropdown */
+select.dropdown {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+/* Scrollbar - subtle */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
+}
+
+/* Wallet adapter - match card style */
+.wallet-adapter-button {
+  background: var(--surface-elevated) !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  transition: background 0.2s, border-color 0.2s !important;
+}
+.wallet-adapter-button:hover {
+  background: var(--surface-overlay) !important;
+  border-color: var(--teal) !important;
+}
+/* Wallet modal: use adapter defaults (position, layout). Only light theme tweaks + pointer. */
+.wallet-adapter-modal-wrapper {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+.wallet-adapter-modal-container {
+  background: var(--surface-elevated) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 16px !important;
+}
+.wallet-adapter-modal-container button {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+.wallet-adapter-modal-title {
+  color: var(--fg) !important;
+}
+.wallet-adapter-modal-list li button {
+  color: var(--fg) !important;
+  background: var(--surface-overlay) !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+.wallet-adapter-modal-list li button:hover {
+  background: var(--teal) !important;
+  color: #fff !important;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Keep dashboard canvas/fg over Shadcn base */
+body {
+  background: var(--canvas) !important;
+  color: var(--fg) !important;
+}
