@@ -32,12 +32,27 @@ export function useDeriverseTrades(): UseDeriverseTradesResult {
     setLoading(true);
     setError(null);
     try {
+      console.log(`[Deriverse] Fetching trades for wallet: ${publicKey.toBase58()}`);
       const list = await fetchTradesForWallet(connection, publicKey.toBase58());
+      console.log(`[Deriverse] Fetched ${list.length} trades`);
+      console.log(`[Deriverse] Sample trade:`, list.length > 0 ? {
+        id: list[0].id,
+        symbol: list[0].symbol,
+        txSignature: list[0].txSignature,
+        pnl: list[0].pnl,
+        closedAt: list[0].closedAt
+      } : null);
       setTrades(list.length > 0 ? list : MOCK_TRADES);
-      if (list.length === 0) setError("No Deriverse history or RPC limit — showing demo data.");
-      else setError(null);
+      if (list.length === 0) {
+        const errorMsg = "No Deriverse trades found. Make a trade on Deriverse testnet or check console for details.";
+        console.warn(`[Deriverse] ${errorMsg}`);
+        setError(errorMsg);
+      } else {
+        setError(null);
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : "RPC limit or error — showing demo data.";
+      console.error(`[Deriverse] Error fetching trades:`, e);
       setError(message);
       setTrades(MOCK_TRADES);
     } finally {
@@ -58,6 +73,20 @@ export function useDeriverseTrades(): UseDeriverseTradesResult {
 
   const isLive = !!publicKey && !loading && trades.length > 0 && trades.some((t) => t.txSignature != null);
   const showingDemo = !!publicKey && !loading && !isLive && trades.length > 0;
+  
+  // Debug logging
+  useEffect(() => {
+    if (publicKey) {
+      console.log(`[Deriverse] Hook state:`, {
+        tradesCount: trades.length,
+        loading,
+        isLive,
+        showingDemo,
+        hasTxSignature: trades.some((t) => t.txSignature != null),
+        sampleTrade: trades[0] ? { id: trades[0].id, symbol: trades[0].symbol, txSig: trades[0].txSignature } : null
+      });
+    }
+  }, [publicKey, trades, loading, isLive, showingDemo]);
 
   return {
     trades,

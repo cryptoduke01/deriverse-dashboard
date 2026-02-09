@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 
 const DEFAULT_SYMBOLS = ["All", "SOL-USDC", "BTC-PERP", "ETH-PERP", "SOL-PERP", "mSOL-USDC"];
-const TIME_RANGES = ["24H", "7D", "30D", "YTD"] as const;
+const TIME_RANGES = ["All", "24H", "7D", "30D", "YTD"] as const;
 
 export interface FilterState {
   symbol: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { Sidebar } from "@/components/sidebar";
@@ -24,7 +24,7 @@ const DEFAULT_FILTERS: FilterState = {
   symbol: "All",
   dateFrom: "",
   dateTo: "",
-  timeRange: "30D",
+  timeRange: "All",
 };
 
 const sectionTransition = { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] };
@@ -39,8 +39,26 @@ export default function DashboardPage() {
 
   const symbolOptions = useMemo(() => {
     const symbols = [...new Set(rawTrades.map((t) => t.symbol))].sort();
+    console.log(`[Deriverse] Symbol options:`, symbols);
     return ["All", ...symbols];
   }, [rawTrades]);
+  
+  // Debug: log raw trades
+  useEffect(() => {
+    if (rawTrades.length > 0 && rawTrades[0].txSignature) {
+      console.log(`[Deriverse] Page received ${rawTrades.length} raw trades:`, {
+        firstTrade: {
+          id: rawTrades[0].id,
+          symbol: rawTrades[0].symbol,
+          closedAt: rawTrades[0].closedAt,
+          txSignature: rawTrades[0].txSignature
+        },
+        isLive,
+        showingDemo,
+        filters
+      });
+    }
+  }, [rawTrades, isLive, showingDemo, filters]);
 
   const { trades, summary } = useMemo(() => {
     let list = rawTrades;
@@ -48,14 +66,32 @@ export default function DashboardPage() {
     const dateFrom = filters.dateFrom ? parseISO(filters.dateFrom) : undefined;
     const dateTo = filters.dateTo ? parseISO(filters.dateTo) : undefined;
     if (dateTo) dateTo.setHours(23, 59, 59, 999);
-    const summary = computeAnalytics(list, { symbolFilter, dateFrom, dateTo });
-    if (symbolFilter || dateFrom || dateTo) {
+    
+    // Apply time range filter if no custom dates and timeRange is not "All"
+    let effectiveDateFrom = dateFrom;
+    if (!dateFrom && !dateTo && filters.timeRange && filters.timeRange !== "All") {
+      const now = new Date();
+      if (filters.timeRange === "24H") {
+        effectiveDateFrom = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      } else if (filters.timeRange === "7D") {
+        effectiveDateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (filters.timeRange === "30D") {
+        effectiveDateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      } else if (filters.timeRange === "YTD") {
+        effectiveDateFrom = new Date(now.getFullYear(), 0, 1);
+      }
+    }
+    
+    const summary = computeAnalytics(list, { symbolFilter, dateFrom: effectiveDateFrom, dateTo });
+    if (symbolFilter || effectiveDateFrom || dateTo) {
+      const beforeFilter = list.length;
       list = list.filter((t) => {
         if (symbolFilter && t.symbol !== symbolFilter) return false;
-        if (dateFrom && t.closedAt < dateFrom) return false;
+        if (effectiveDateFrom && t.closedAt < effectiveDateFrom) return false;
         if (dateTo && t.closedAt > dateTo) return false;
         return true;
       });
+      console.log(`[Deriverse] Filtered ${beforeFilter} → ${list.length} trades (symbol: ${symbolFilter || "All"}, dateFrom: ${effectiveDateFrom?.toISOString() || "none"}, dateTo: ${dateTo?.toISOString() || "none"})`);
     }
     return { trades: list, summary };
   }, [rawTrades, filters]);

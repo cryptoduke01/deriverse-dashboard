@@ -129,13 +129,15 @@ export async function fetchTradesForWallet(
 ): Promise<Trade[]> {
   const engine = await getEngine();
   const allTrades: Trade[] = [];
-  const limit = 20;
+  const limit = 1000; // Increased to fetch more history
   const batchSize = 5;
-  const maxTxs = 20;
+  const maxTxs = 100; // Increased to process more transactions
   const delayMs = 600;
 
   const pk = new PublicKey(walletAddress);
+  console.log(`[Deriverse] Fetching tx history for ${walletAddress}...`);
   const result = await connection.getSignaturesForAddress(pk, { limit });
+  console.log(`[Deriverse] Found ${result.length} transactions`);
   const signatures = result.map((s) => ({ signature: s.signature }));
 
   for (let i = 0; i < Math.min(signatures.length, maxTxs); i += batchSize) {
@@ -151,18 +153,25 @@ export async function fetchTradesForWallet(
       const tx = txs[j];
       if (!tx?.meta?.logMessages?.some(isProgramLog)) continue;
       const programDataLogs = tx.meta.logMessages.filter(isProgramLog);
+      console.log(`[Deriverse] Found ${programDataLogs.length} program logs in tx ${batch[j].signature.slice(0, 8)}...`);
       let decoded: LogMessage[];
       try {
         decoded = engine.logsDecode(programDataLogs);
-      } catch {
+        console.log(`[Deriverse] Decoded ${decoded.length} log messages`);
+      } catch (err) {
+        console.warn(`[Deriverse] Failed to decode logs:`, err);
         continue;
       }
       const blockTime = tx.blockTime ?? null;
       const parsed = parseTradesFromLogs(decoded, batch[j].signature, blockTime);
-      if (parsed.length > 0) allTrades.push(...parsed);
+      if (parsed.length > 0) {
+        console.log(`[Deriverse] Parsed ${parsed.length} trades from tx ${batch[j].signature.slice(0, 8)}...`);
+        allTrades.push(...parsed);
+      }
     }
   }
 
   allTrades.sort((a, b) => b.closedAt.getTime() - a.closedAt.getTime());
+  console.log(`[Deriverse] Total trades found: ${allTrades.length}`);
   return allTrades;
 }
